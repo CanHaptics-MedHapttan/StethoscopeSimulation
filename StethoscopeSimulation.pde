@@ -19,6 +19,7 @@ import java.util.concurrent.*;
 import controlP5.*;
 import java.util.ArrayList;
 import ddf.minim.*;
+import processing.video.*;
 /* end library imports *************************************************************************************************/  
 
 
@@ -27,6 +28,8 @@ private final ScheduledExecutorService scheduler      = Executors.newScheduledTh
 /* end scheduler definition ********************************************************************************************/ 
 
 ControlP5 cp5;
+Movie video;
+PImage heartPlacementImage;
 
 /* device block definitions ********************************************************************************************/
 Board             haplyBoard;
@@ -206,24 +209,31 @@ void readWaveformData(){
 /* setup section *******************************************************************************************************/
 void setup(){
   /* put setup code here, run once: */
-  
+  /* screen size definition */
+  size(1440, 700);
+
+
   stethoscopeImage = loadImage("images/stethoscope.png");
   stethoscopeImage.resize(75, 0);
+
+  // Load the video
+  video = new Movie(this, "heartbeatVideo.mp4");
+  video.loop();
+
+  // Load the image
+  heartPlacementImage = loadImage("images/HeartPlacementsGraphic.png");
     
-  heart = loadImage("images/background.png");
-  heart.resize(1000, 700);
 waveformSamples = new WaveformSample[4];
 for(int i = 0; i < waveformSamples.length; i++){
   waveformSamples[i] = new WaveformSample();
 }
 
-areas[0] = new PVector(532,323); // position 1
-areas[1]= new PVector(650, 321); // position 2
-areas[2] = new PVector(635.5, 422); // position 3
-areas[3] = new PVector(693, 460); // position 4
+areas[0] = new PVector(481,307); // position 1
+areas[1]= new PVector(535, 307); // position 2
+areas[2] = new PVector(538, 405); // position 3
+areas[3] = new PVector(594, 424); // position 4
 
-  /* screen size definition */
-  size(1000, 700);
+  
 
   // Generate a CSV waveform data file for each audio wave file in audio directory if they don't already exist
   generateWaveformFiles();
@@ -339,7 +349,13 @@ void draw(){
   if(renderingForce == false){
     background(255); 
 
-    image(heart, 0, 0);
+    //image(heart, 0, 0);
+    // Display the video
+    image(video, width/2, 0, width/2, height ); 
+  
+    // Display the image
+    image(heartPlacementImage, 0, 0, 1000, 700 );
+
     imageX = deviceOrigin.x + posEE.x * pixelsPerMeter - stethoscopeImage.width / 2;
     imageY = deviceOrigin.y + posEE.y * pixelsPerMeter - stethoscopeImage.height / 2;
     image(stethoscopeImage, imageX, imageY);
@@ -531,3 +547,7 @@ void arrow(float x1, float y1, float x2, float y2) {
 } 
 
 /* end helper functions section ****************************************************************************************/
+
+void movieEvent(Movie m) {
+  m.read();
+}
