@@ -183,7 +183,7 @@ public void generateWaveformFiles(){
       String fileIn = audioDirectory + "\\" + waveFile;
       //SET AUDIO FILES HERE
 
-      String fileOut = waveFormDataDirectory + "\\sample_"+ waveFile.substring(0, waveFile.length() - 3) + "csv";
+      String fileOut = waveFormDataDirectory + "\\"+ waveFile.substring(0, waveFile.length() - 4) + "_sample.csv";
       if(!Files.exists(Paths.get(fileOut))){
         ProcessBuilder processBuilder = new ProcessBuilder("python", wave_to_csv_script, fileIn, fileOut);
         processBuilder.redirectErrorStream(true);
@@ -218,14 +218,15 @@ public void readWaveformData(){
    try {
     for (int i = 0; i < wavedataFiles.length && i < 4; i++) {
       String fileIn = waveFormDataDirectory + "\\" + wavedataFiles[i];
+      int sampleIndex = Integer.parseInt(String.valueOf(wavedataFiles[i].charAt(0)));
       //String fileIn = waveFormDataDirectory + "\\" + "heartbeat-regular-1k-fp.csv";
 
       Table table = loadTable(fileIn, "header");
-
-      waveformSamples[i].data = new ArrayList<Float>();
-      waveformSamples[i].hapticName = wavedataFiles[i];
+      
+      waveformSamples[sampleIndex].data = new ArrayList<Float>();
+      waveformSamples[sampleIndex].hapticName = wavedataFiles[i];
       for (TableRow row : table.rows()) {
-        waveformSamples[i].data.add(row.getFloat("samples"));
+        waveformSamples[sampleIndex].data.add(row.getFloat("samples"));
         
       } 
     }
@@ -234,6 +235,11 @@ public void readWaveformData(){
   catch(Exception e){
     System.out.println(e);
   }   
+}
+
+public PVector getCorrespondingArea(String fileName){
+  int index = Integer.parseInt(String.valueOf(fileName.charAt(0)));
+  return areas[index];
 }
 
 /* setup section *******************************************************************************************************/
@@ -253,15 +259,18 @@ public void setup(){
   // Load the image
   heartPlacementImage = loadImage("images/HeartPlacementsGraphic.png");
     
-waveformSamples = new WaveformSample[4];
-for(int i = 0; i < waveformSamples.length; i++){
-  waveformSamples[i] = new WaveformSample();
-}
+  areas[0] = new PVector(481,307); // position 1
+  areas[1]= new PVector(535, 307); // position 2
+  areas[2] = new PVector(538, 405); // position 3
+  areas[3] = new PVector(594, 424); // position 4
 
-areas[0] = new PVector(481,307); // position 1
-areas[1]= new PVector(535, 307); // position 2
-areas[2] = new PVector(538, 405); // position 3
-areas[3] = new PVector(594, 424); // position 4
+  waveformSamples = new WaveformSample[4];
+  for(int i = 0; i < waveformSamples.length; i++){
+    waveformSamples[i] = new WaveformSample();
+    waveformSamples[i].area = areas[i];
+  }
+
+
 
   
 
@@ -278,11 +287,13 @@ areas[3] = new PVector(594, 424); // position 4
   
   //String[] audioFilesArray = audioFiles.toArray(new String[0]);
   for (int i = 0; i < waveformSamples.length; i++) {
-    waveformSamples[i].audioName = audioFiles[i];
+    int sampleIndex = Integer.parseInt(String.valueOf(audioFiles[i].charAt(0)));
+    waveformSamples[sampleIndex].audioName = audioFiles[i];
     //waveformSamples[i].audio = minim.loadFile(audioDirectory + "\\mp3\\" + audioFiles[i]);
-    waveformSamples[i].audio = minim.loadFile(audioDirectory + "\\mp3\\" + audioFiles[i].substring(0, audioFiles[i].length() - 3) + "mp3"); //TEMPORARY - MUST USE ABOVE
+    waveformSamples[sampleIndex].audio = minim.loadFile(audioDirectory + "\\mp3\\" + audioFiles[i].substring(0, audioFiles[i].length() - 3) + "mp3"); //TEMPORARY - MUST USE ABOVE
    // waveformSamples[i].audio = minim.loadFile(waveFormDataDirectory + "\\sample_"+ audioFilesArray[i].substring(0, waveFile.length() - 3) + "csv");
-    waveformSamples[i].area = areas[i]; //TODO : find a way to associate area with correct audio
+    //waveformSamples[i].area = areas[i]; //TODO : find a way to associate area with correct audio
+    //waveformSamples[i].area = getCorrespondingArea(waveformSamples[i].hapticName); //TODO : find a way to associate area with correct audio
   }
        
   /* GUI setup */
