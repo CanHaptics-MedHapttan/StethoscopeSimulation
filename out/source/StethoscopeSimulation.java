@@ -188,8 +188,8 @@ public void setup(){
   // Load the image
   heartPlacementImage = loadImage("images/HeartPlacementsGraphic.png");
     
-  //sample = new SoundFile(this, "0-aortic_valve.wav");
-  //sample.loop();
+  sample = new SoundFile(this, "0-aortic_valve.wav");
+  sample.loop();
 
   waveform = new Waveform(this, samples);
   waveform.input(sample);
@@ -212,7 +212,7 @@ public void setup(){
 
   /* smooth commented out by preprocessor */;
 
-  /* cp5 = new ControlP5(this);
+  cp5 = new ControlP5(this);
     
   cp5.addTextlabel("Intensity multiplier")
       .setText("Intensity multiplier")
@@ -241,7 +241,7 @@ public void setup(){
       .setNumberOfTickMarks(16)
       .setSliderMode(Slider.FLEXIBLE)
       ;
- */
+
 
 
   /* device setup */
@@ -371,7 +371,7 @@ while(1==1) {
 
         //currentSampleIndex = -1; 
 
-        for (int i = 0; i < waveformSamples.length; i++) {
+        /* for (int i = 0; i < waveformSamples.length; i++) {
          // ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
 
           if (dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y) < 50) {
@@ -386,7 +386,7 @@ while(1==1) {
             //waveformSamples[i].audio.jump(0.0);
             audioPlaying = false;  
           }
-        } 
+        }  */
         if(noforce==1)
         {
           fEE.x=0.0f;
@@ -411,13 +411,14 @@ while(1==1) {
           }
           
 
-          float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
+          //float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
+          float y = map(waveform.data[currentSampleIndex%(100-1)], -0.9423218f, 0.93618774f, -1, 1) * intensityMultiplier;
           //println(y);
-          if(waveform.data[currentSampleIndex%(100-1)] < -0.8f || waveform.data[currentSampleIndex%(100-1)] > 0.8f){
+          /* if(waveform.data[currentSampleIndex%(100-1)] < -0.5 || waveform.data[currentSampleIndex%(100-1)] > 0.5){
             y = 1;  
-          } 
+          }  */
           //if(waveform.data[currentSampleIndex%(100-1)] > 0.5) y = 1;
-          directionMultiplier *= -1;
+          //directionMultiplier *= -1;
           fEE.y = directionMultiplier * y * intensityMultiplier;
           fEE.x = 0.0f;
           currentSampleIndex++;
