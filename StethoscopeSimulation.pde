@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import ddf.minim.*;
 import processing.video.*;
 import processing.sound.*;
+import gifAnimation.*;
 /* end library imports *************************************************************************************************/  
 
 
@@ -31,6 +32,7 @@ private final ScheduledExecutorService scheduler      = Executors.newScheduledTh
 ControlP5 cp5;
 Movie video;
 PImage heartPlacementImage;
+Gif heartbeatImage;
 
 /* device block definitions ********************************************************************************************/
 Board             haplyBoard;
@@ -115,11 +117,11 @@ AudioPlayer audio4;
 
 private class WaveformSample {
   SoundFile audio;
-  ArrayList<Float> data;
   PVector area;
-  String hapticName;
-  String audioName;
+  PVector circle;
   Waveform waveform;
+  float minData;
+  float maxData;
 }
 
 WaveformSample[] waveformSamples;
@@ -151,9 +153,14 @@ void setup(){
   stethoscopeImage = loadImage("images/stethoscope.png");
   stethoscopeImage.resize(75, 0);
 
+  //heartbeatImage = loadImage("images/heartbeatVideo6.gif");
+  heartbeatImage = new Gif(this, "images/heartbeatAnimation.gif");
+  heartbeatImage.play();
+  //heartbeatImage.resize(75, 0);
+
   // Load the video
-  video = new Movie(this, "heartbeatVideo.mp4");
-  video.loop();
+  //video = new Movie(this, "heartbeatVideo.mp4");
+  //video.loop();
 
   // Load the image
   heartPlacementImage = loadImage("images/HeartPlacementsGraphic.png");
@@ -164,32 +171,61 @@ void setup(){
   //waveform = new Waveform(this, samples);
   //waveform.input(sample);
 
+  // Ausculation points on heart image
+  PVector[] areas = new PVector[4];
   areas[0] = new PVector(481,307); // position 1
   areas[1]= new PVector(535, 307); // position 2
   areas[2] = new PVector(538, 405); // position 3
   areas[3] = new PVector(594, 424); // position 4
 
+  // Circular highlight points on heartbeat video
+  PVector[] circles = new PVector[4];
+  circles[0] = new PVector(1275, 245); // circle 1
+  circles[1]= new PVector(1225, 180); // circle 2
+  circles[2] = new PVector(1165, 300); // circle 3
+  circles[3] = new PVector(1305, 300); // circle 4
+
   waveformSamples = new WaveformSample[4];
   for(int i = 0; i < waveformSamples.length; i++){
     waveformSamples[i] = new WaveformSample();
-    waveformSamples[i].area = areas[i];    
+    waveformSamples[i].area = areas[i];
+    waveformSamples[i].circle = circles[i];
+    waveformSamples[i].waveform = new  Waveform(this, samples);
   } 
 
-  waveformSamples[0].audio = new SoundFile(this, "heartbeat_regular-1k-fp.wav");
+  waveformSamples[0].audio = new SoundFile(this, "0-aortic_valve.wav");
   waveformSamples[1].audio = new SoundFile(this, "1-pulmonary_valve.wav");
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
 
+  for(int i = 0; i < waveformSamples.length; i++){
+    waveformSamples[i].waveform.input(waveformSamples[i].audio);
+    
+    float min = Float.MAX_VALUE;
+    float max = -Float.MAX_VALUE;
+    println("INDEX=" + i + " BEFORE : min="+min+ "| max="+max);
+    // Find the minimum and maximum waveform data values for each waveform in order to map the output range to a given threshold later on
+   for(int dataIndex = 0; dataIndex < waveformSamples[i].waveform.data.length; dataIndex++){
+      waveformSamples[i].waveform.analyze();
+      if(waveformSamples[i].waveform.data[dataIndex] < min){
+        min = waveformSamples[i].waveform.data[dataIndex];
+      }
+      if(waveformSamples[i].waveform.data[dataIndex] > max){
+        max = waveformSamples[i].waveform.data[dataIndex];
+      }
+    }
+    println("INDEX=" + i + " AFTER : min="+min+ "| max="+max+"\n");
+    waveformSamples[i].minData = min;
+    waveformSamples[i].maxData = max;
+    //waveformSamples[i].maxData = Floats.max(waveformSamples[i].waveform.data);
+  } 
 
-  waveformSamples[0].waveform = new  Waveform(this, samples);
-  waveformSamples[1].waveform = new  Waveform(this, samples);
-  waveformSamples[2].waveform = new  Waveform(this, samples);
-  waveformSamples[3].waveform = new  Waveform(this, samples);
-
-  waveformSamples[0].waveform.input(waveformSamples[0].audio);
+  /* waveformSamples[0].waveform.input(waveformSamples[0].audio);
   waveformSamples[0].waveform.input(waveformSamples[1].audio);
   waveformSamples[0].waveform.input(waveformSamples[2].audio);
   waveformSamples[0].waveform.input(waveformSamples[3].audio);
+ */
+
 
   smooth();
 
@@ -274,7 +310,7 @@ void setup(){
 /* end setup section ***************************************************************************************************/
 
 
-PVector[] areas = new PVector[4];
+
 int circle = 15;
 float imageX = 0;
 float imageY = 0;
@@ -287,7 +323,7 @@ void draw(){
 
     //image(heart, 0, 0);
     // Display the video
-    image(video, 1000, -150, 440, 1000); 
+    image(heartbeatImage, 900, -150, 700, 900); 
   
     // Display the image
     image(heartPlacementImage, 0, 0, 1000, 700);
@@ -298,9 +334,16 @@ void draw(){
 
     fill(255, 0, 0, 100); 
     noStroke();
-   for (int i = 0; i < waveformSamples.length; i++) {
-          ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
+    for (int i = 0; i < waveformSamples.length; i++) {
+      ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
     } 
+
+    noFill();
+    stroke(0, 200, 0);
+   // for (int i = 0; i < waveformSamples.length; i++) {
+    if(currentSampleIndex != -1){
+      ellipse(waveformSamples[currentSampleIndex].circle.x, waveformSamples[currentSampleIndex].circle.y, circle * 6, circle * 6);
+    }
   }
   
   /* waveform.analyze();
@@ -357,8 +400,7 @@ while(1==1) {
             currentSampleIndex = i;
             if (!waveformSamples[i].audio.isPlaying()) {          
               waveformSamples[i].audio.loop();    
-              audioPlaying = true;   
-              
+              audioPlaying = true;              
             }
           }
           else if(waveformSamples[i].audio.isPlaying()){    
@@ -370,7 +412,7 @@ while(1==1) {
           }
            //if(currentSampleIndex != -1) println(currentSampleIndex);
         }  
-        println(currentSampleIndex);
+        //println(currentSampleIndex);
         
         if(renderWaveForm && currentSampleIndex !=-1){         
           // Send values of wavefile csv to Haply force rendering output
@@ -380,8 +422,10 @@ while(1==1) {
           
 
           //float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
-          //float y = map(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(100-1)], -1, 1, -1, 1);
-          float y = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
+          float y = map(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)], -0.5, 1, -1, 1);
+          //float y = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
+          //println("MIN = " + waveformSamples[currentSampleIndex].minData);
+          //println("MAX = " + waveformSamples[currentSampleIndex].maxData);
           // println(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(100-1)]);
           //println(y);
           /* if(waveform.data[currentSampleIndex%(100-1)] < -0.5 || waveform.data[currentSampleIndex%(100-1)] > 0.5){
@@ -391,10 +435,8 @@ while(1==1) {
           //directionMultiplier *= -1;
           fEE.y = y * intensityMultiplier;
           fEE.x = 0.0;
-         
-          if(currentSampleIndex>=100) {println("min= " + minv+ "max= " + maxv);}
 
-           waveIndex++;      
+          waveIndex++;      
         }
         else
         {
@@ -496,6 +538,6 @@ PVector graphics_to_device(PVector graphicsFrame){
 
 /* end helper functions section ****************************************************************************************/
 
-void movieEvent(Movie m) {
-  m.read();
+void movieEvent(Movie movie) {
+  movie.read();
 }
