@@ -119,6 +119,7 @@ private class WaveformSample {
   PVector area;
   String hapticName;
   String audioName;
+  Waveform waveform;
 }
 
 WaveformSample[] waveformSamples;
@@ -134,10 +135,10 @@ String wave_to_csv_script = workingDirectory + "\\wave_to_csv.py";
 
 String[] audioFiles;
 
-SoundFile sample;
-Waveform waveform;
+//SoundFile sample;
+//Waveform waveform;
 
-int samples = 1000;
+int samples = 2020;
 
 
 /* setup section *******************************************************************************************************/
@@ -157,11 +158,11 @@ void setup(){
   // Load the image
   heartPlacementImage = loadImage("images/HeartPlacementsGraphic.png");
     
-  sample = new SoundFile(this, "0-aortic_valve.wav");
-  sample.loop();
+  //sample = new SoundFile(this, "0-aortic_valve-1k-fp.wav");
+  //sample.loop();
 
-  waveform = new Waveform(this, samples);
-  waveform.input(sample);
+  //waveform = new Waveform(this, samples);
+  //waveform.input(sample);
 
   areas[0] = new PVector(481,307); // position 1
   areas[1]= new PVector(535, 307); // position 2
@@ -178,6 +179,17 @@ void setup(){
   waveformSamples[1].audio = new SoundFile(this, "1-pulmonary_valve.wav");
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
+
+
+  waveformSamples[0].waveform = new  Waveform(this, samples);
+  waveformSamples[1].waveform = new  Waveform(this, samples);
+  waveformSamples[2].waveform = new  Waveform(this, samples);
+  waveformSamples[3].waveform = new  Waveform(this, samples);
+
+  waveformSamples[0].waveform.input(waveformSamples[0].audio);
+  waveformSamples[0].waveform.input(waveformSamples[1].audio);
+  waveformSamples[0].waveform.input(waveformSamples[2].audio);
+  waveformSamples[0].waveform.input(waveformSamples[3].audio);
 
   smooth();
 
@@ -338,24 +350,27 @@ while(1==1) {
         posEE.set(widgetOne.get_device_position(angles.array()));
         posEE.set(device_to_graphics(posEE)); 
 
-        //currentSampleIndex = -1; 
+        currentSampleIndex = -1; 
 
-        /* for (int i = 0; i < waveformSamples.length; i++) {
+         for (int i = 0; i < waveformSamples.length; i++) {
          // ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
 
           if (dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y) < 50) {
-            if (!audioPlaying) {          
-              waveformSamples[i].audio.play();    
+            if (!waveformSamples[i].audio.isPlaying()) {          
+              waveformSamples[i].audio.loop();    
               audioPlaying = true;   
               currentSampleIndex = i;
             }
           }
-          else {      
-            waveformSamples[i].audio.pause();
+          else if(waveformSamples[i].audio.isPlaying()){    
+            waveformSamples[i].audio.jump(0.0);
+            waveformSamples[i].audio.pause();  
+            
             //waveformSamples[i].audio.jump(0.0);
             audioPlaying = false;  
           }
-        }  */
+           println(currentSampleIndex);
+        }  
         if(noforce==1)
         {
           fEE.x=0.0;
@@ -363,36 +378,23 @@ while(1==1) {
         }
         else if(renderWaveForm){         
           // Send values of wavefile csv to Haply force rendering output
-          waveform.analyze();
-
-          if(!fileGenerated){
-            Table table = new Table();  
-            table.addColumn("sample");
-                      
-            for(int i = 0; i < waveform.data.length; i++)
-            {
-              TableRow newRow = table.addRow();
-              newRow.setFloat("sample", waveform.data[i]);
-              //rintln(map(waveform.data[i], -1, 1, -1, 1));
-              //println(map(waveform.data[i], -1, 1, -1, 1));
-            } 
-            saveTable(table, "data/WAVE_DATA.csv");
-          }
+          //waveformSamples[currentSampleIndex].waveform.analyze();
           
 
           //float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
-          float y = map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
+          float y =0;// map(waveformSamples[currentSampleIndex].data[waveIndex%(100-1)], -1, 1, -1, 1) * intensityMultiplier;
           //println(y);
           /* if(waveform.data[currentSampleIndex%(100-1)] < -0.5 || waveform.data[currentSampleIndex%(100-1)] > 0.5){
             y = 1;  
           }  */
           //if(waveform.data[currentSampleIndex%(100-1)] > 0.5) y = 1;
           //directionMultiplier *= -1;
-          fEE.y = directionMultiplier * y * intensityMultiplier;
+          fEE.y = y * intensityMultiplier;
           fEE.x = 0.0;
-          currentSampleIndex++;
-          println(currentSampleIndex);
+         
           if(currentSampleIndex>=100) {println("min= " + minv+ "max= " + maxv);}
+
+           waveIndex++;      
         }
         widgetOne.set_device_torques(graphics_to_device(fEE).array());      
       }
