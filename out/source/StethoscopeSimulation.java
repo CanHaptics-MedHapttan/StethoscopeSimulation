@@ -169,7 +169,7 @@ String[] audioFiles;
 //SoundFile sample;
 //Waveform waveform;
 
-int samples = 2020;
+int samples = 100;
 
 
 /* setup section *******************************************************************************************************/
@@ -206,7 +206,7 @@ public void setup(){
     waveformSamples[i].area = areas[i];    
   } 
 
-  waveformSamples[0].audio = new SoundFile(this, "0-aortic_valve.wav");
+  waveformSamples[0].audio = new SoundFile(this, "heartbeat_regular-1k-fp.wav");
   waveformSamples[1].audio = new SoundFile(this, "1-pulmonary_valve.wav");
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
@@ -383,16 +383,13 @@ while(1==1) {
 
         currentSampleIndex = -1; 
 
-         for (int i = 0; i < waveformSamples.length; i++) {
-         // ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
-          
+         for (int i = 0; i < waveformSamples.length; i++) {          
           if (dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y) < 15) {
+            currentSampleIndex = i;
             if (!waveformSamples[i].audio.isPlaying()) {          
               waveformSamples[i].audio.loop();    
               audioPlaying = true;   
-              currentSampleIndex = i;
-              if(currentSampleIndex == 0)
-                println(dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y));
+              
             }
           }
           else if(waveformSamples[i].audio.isPlaying()){    
@@ -404,18 +401,19 @@ while(1==1) {
           }
            //if(currentSampleIndex != -1) println(currentSampleIndex);
         }  
-        if(noforce==1)
-        {
-          fEE.x=0.0f;
-          fEE.y=0.0f;
-        }
-        else if(renderWaveForm){         
+        println(currentSampleIndex);
+        
+        if(renderWaveForm && currentSampleIndex !=-1){         
           // Send values of wavefile csv to Haply force rendering output
-          //waveformSamples[currentSampleIndex].waveform.analyze();
+          waveformSamples[currentSampleIndex].waveform.input(waveformSamples[currentSampleIndex].audio);
+          waveformSamples[currentSampleIndex].waveform.analyze();
+         
           
 
           //float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
-          float y =0;// map(waveformSamples[currentSampleIndex].data[waveIndex%(100-1)], -1, 1, -1, 1) * intensityMultiplier;
+          //float y = map(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(100-1)], -1, 1, -1, 1);
+          float y = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
+          // println(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(100-1)]);
           //println(y);
           /* if(waveform.data[currentSampleIndex%(100-1)] < -0.5 || waveform.data[currentSampleIndex%(100-1)] > 0.5){
             y = 1;  
@@ -428,6 +426,11 @@ while(1==1) {
           if(currentSampleIndex>=100) {println("min= " + minv+ "max= " + maxv);}
 
            waveIndex++;      
+        }
+        else
+        {
+          fEE.x=0.0f;
+          fEE.y=0.0f;
         }
         widgetOne.set_device_torques(graphics_to_device(fEE).array());      
       }
