@@ -140,39 +140,28 @@ PFont f;
 PImage stethoscopeImage;
 PImage heart;
 
-Minim minim;
-boolean audioPlaying = false;
-AudioPlayer audio1;
-AudioPlayer audio2;
-AudioPlayer audio3;
-AudioPlayer audio4;
+int circleRadius = 15;
+float imageX = 0;
+float imageY = 0;
 
+/* Haptic rendering elements */
 private class WaveformSample {
   SoundFile audio;
   PVector area;
   PVector circle;
   Waveform waveform;
-  float minData;
-  float maxData;
+  float minData = Float.MAX_VALUE;
+  float maxData = -Float.MAX_VALUE;
 }
 
 WaveformSample[] waveformSamples;
 int currentSampleIndex = 0;
-/* end elements definition *********************************************************************************************/ 
-boolean renderWaveForm = true;
 int waveIndex = 0;
-String workingDirectory = "C:\\Users\\naomi\\Documents\\GIT\\ETS\\CanHaptics\\MedHapttanProject\\StethoscopeSimulation";
-String audioDirectory = workingDirectory + "\\audio";
-String waveFormDataDirectory = workingDirectory + "\\waveformdata";
-String wave_to_csv_script = workingDirectory + "\\wave_to_csv.py";
-
-
-String[] audioFiles;
-
-//SoundFile sample;
-//Waveform waveform;
-
+boolean renderWaveForm = true;
 int samples = 100;
+
+/* end elements definition *********************************************************************************************/ 
+
 
 
 /* setup section *******************************************************************************************************/
@@ -181,27 +170,14 @@ public void setup(){
   /* screen size definition */
   /* size commented out by preprocessor */;
 
-
+// Load the images
   stethoscopeImage = loadImage("images/stethoscope.png");
   stethoscopeImage.resize(75, 0);
 
-  //heartbeatImage = loadImage("images/heartbeatVideo6.gif");
-  heartbeatImage = new Gif(this, "images/heartbeatVideo6.gif");
+  heartbeatImage = new Gif(this, "images/heartbeatAnimation.gif");
   heartbeatImage.play();
-  //heartbeatImage.resize(75, 0);
-
-  // Load the video
-  //video = new Movie(this, "heartbeatVideo.mp4");
-  //video.loop();
-
-  // Load the image
+  
   heartPlacementImage = loadImage("images/HeartPlacementsGraphic.png");
-    
-  //sample = new SoundFile(this, "0-aortic_valve-1k-fp.wav");
-  //sample.loop();
-
-  //waveform = new Waveform(this, samples);
-  //waveform.input(sample);
 
   // Ausculation points on heart image
   PVector[] areas = new PVector[4];
@@ -230,15 +206,15 @@ public void setup(){
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
 
-  for(int i = 0; i < waveformSamples.length; i++){
-    waveformSamples[i].waveform.input(waveformSamples[i].audio);
-    
+  for(int i = 0; i < waveformSamples.length; i++){      
     float min = Float.MAX_VALUE;
     float max = -Float.MAX_VALUE;
     println("INDEX=" + i + " BEFORE : min="+min+ "| max="+max);
     // Find the minimum and maximum waveform data values for each waveform in order to map the output range to a given threshold later on
    for(int dataIndex = 0; dataIndex < waveformSamples[i].waveform.data.length; dataIndex++){
-      waveformSamples[i].waveform.analyze();
+      waveformSamples[i].waveform.input(waveformSamples[i].audio);
+      waveformSamples[i].waveform.analyze();   
+
       if(waveformSamples[i].waveform.data[dataIndex] < min){
         min = waveformSamples[i].waveform.data[dataIndex];
       }
@@ -251,13 +227,6 @@ public void setup(){
     waveformSamples[i].maxData = max;
     //waveformSamples[i].maxData = Floats.max(waveformSamples[i].waveform.data);
   } 
-
-  /* waveformSamples[0].waveform.input(waveformSamples[0].audio);
-  waveformSamples[0].waveform.input(waveformSamples[1].audio);
-  waveformSamples[0].waveform.input(waveformSamples[2].audio);
-  waveformSamples[0].waveform.input(waveformSamples[3].audio);
- */
-
 
   /* smooth commented out by preprocessor */;
 
@@ -322,8 +291,7 @@ public void setup(){
   catch(Exception e)
   {
     System.out.println("HAPLY DEVICE IS NOT CONNECTED!\n" + e);
-  } 
-  
+  }   
   
   /* visual elements setup */
   background(0);
@@ -343,9 +311,7 @@ public void setup(){
 
 
 
-int circle = 15;
-float imageX = 0;
-float imageY = 0;
+
 
 /* draw section ********************************************************************************************************/
 public void draw(){
@@ -353,48 +319,35 @@ public void draw(){
   if(renderingForce == false){
     background(255); 
 
-    //image(heart, 0, 0);
-    // Display the video
-    image(heartbeatImage, 900, -150, 700, 900); 
-  
-    // Display the image
+    // Display the heartbeat animation
+    image(heartbeatImage, 900, -150, 700, 900);
+
+    // Display the asculation points images
     image(heartPlacementImage, 0, 0, 1000, 700);
 
     imageX = deviceOrigin.x + posEE.x * pixelsPerMeter - stethoscopeImage.width / 2;
     imageY = deviceOrigin.y + posEE.y * pixelsPerMeter - stethoscopeImage.height / 2;
     image(stethoscopeImage, imageX, imageY);
 
+    // Display the ausculation points highlights
     fill(255, 0, 0, 100); 
     noStroke();
     for (int i = 0; i < waveformSamples.length; i++) {
-      ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
+      ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circleRadius * 2, circleRadius * 2);
     } 
 
+    // Display the corresponding circular highlight on the heartbeeat animation
     noFill();
     stroke(0, 200, 0);
-   // for (int i = 0; i < waveformSamples.length; i++) {
     if(currentSampleIndex != -1){
-      ellipse(waveformSamples[currentSampleIndex].circle.x, waveformSamples[currentSampleIndex].circle.y, circle * 6, circle * 6);
+      ellipse(waveformSamples[currentSampleIndex].circle.x, waveformSamples[currentSampleIndex].circle.y, circleRadius * 6, circleRadius * 6);
     }
   }
-  
-  /* waveform.analyze();
-  for(int i = 0; i < 100; i++)
-  {
-    println(map(waveform.data[i], -1, 1, -1, 1));
-  } */
-
 }
 /* end draw section ****************************************************************************************************/
 
-int noforce = 0;
 long timetook = 0;
 long looptiming = 0;
-
-float minv = Float.MAX_VALUE;
-float maxv = Float.MIN_VALUE;
-int directionMultiplier = -1;
-boolean fileGenerated = true;
 
 /* simulation section **************************************************************************************************/
 public void SimulationThread(){
@@ -419,7 +372,6 @@ while(1==1) {
         /* GET END-EFFECTOR STATE (TASK SPACE) */
         widgetOne.device_read_data();
         
-        noforce = 0;
         angles.set(widgetOne.get_device_angles());
       
         posEE.set(widgetOne.get_device_position(angles.array()));
@@ -427,34 +379,37 @@ while(1==1) {
 
         currentSampleIndex = -1; 
 
-         for (int i = 0; i < waveformSamples.length; i++) {          
+        // Check if we are at a given ausculation point. If so, store the corresponding currentSampleIndex and play the corresponding audio
+        for (int i = 0; i < waveformSamples.length; i++) {          
           if (dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y) < 15) {
             currentSampleIndex = i;
             if (!waveformSamples[i].audio.isPlaying()) {          
               waveformSamples[i].audio.loop();    
-              audioPlaying = true;              
             }
           }
           else if(waveformSamples[i].audio.isPlaying()){    
             waveformSamples[i].audio.jump(0.0f);
-            waveformSamples[i].audio.pause();  
-            
-            //waveformSamples[i].audio.jump(0.0);
-            audioPlaying = false;  
+            waveformSamples[i].audio.pause();
           }
-           //if(currentSampleIndex != -1) println(currentSampleIndex);
-        }  
-        //println(currentSampleIndex);
+        }
         
-        if(renderWaveForm && currentSampleIndex !=-1){         
-          // Send values of wavefile csv to Haply force rendering output
+        // Render the waveform corresponding to the previously stores currentSampleIndex
+        if(renderWaveForm && currentSampleIndex != -1){         
           waveformSamples[currentSampleIndex].waveform.input(waveformSamples[currentSampleIndex].audio);
-          waveformSamples[currentSampleIndex].waveform.analyze();
-         
-          
+          waveformSamples[currentSampleIndex].waveform.analyze();          
 
           //float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
-          float y = map(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)], -0.5f, 1, -1, 1);
+          //float y = map(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)], -0.5, 1, -4, 4);
+          float waveformValue = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
+          /* if(waveformValue < waveformSamples[currentSampleIndex].minData){
+            waveformSamples[currentSampleIndex].minData = waveformValue;
+          }
+          if(waveformValue > waveformSamples[currentSampleIndex].maxData){
+            waveformSamples[currentSampleIndex].maxData = waveformValue;
+          } */
+
+          
+
           //float y = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
           //println("MIN = " + waveformSamples[currentSampleIndex].minData);
           //println("MAX = " + waveformSamples[currentSampleIndex].maxData);
@@ -464,8 +419,7 @@ while(1==1) {
             y = 1;  
           }  */
           //if(waveform.data[currentSampleIndex%(100-1)] > 0.5) y = 1;
-          //directionMultiplier *= -1;
-          fEE.y = y * intensityMultiplier;
+          fEE.y = map(waveformValue, -0.5f, 1, -4, 4);
           fEE.x = 0.0f;
 
           waveIndex++;      
@@ -569,10 +523,6 @@ public PVector graphics_to_device(PVector graphicsFrame){
 }
 
 /* end helper functions section ****************************************************************************************/
-
-public void movieEvent(Movie movie) {
-  movie.read();
-}
 
 
   public void settings() { size(1440, 700);
