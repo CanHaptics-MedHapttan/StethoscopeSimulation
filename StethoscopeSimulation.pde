@@ -354,12 +354,14 @@ while(1==1) {
 
          for (int i = 0; i < waveformSamples.length; i++) {
          // ellipse(waveformSamples[i].area.x, waveformSamples[i].area.y, circle * 2, circle * 2);
-
-          if (dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y) < 50) {
+          
+          if (dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y) < 15) {
             if (!waveformSamples[i].audio.isPlaying()) {          
               waveformSamples[i].audio.loop();    
               audioPlaying = true;   
               currentSampleIndex = i;
+              if(currentSampleIndex == 0)
+                println(dist(imageX + stethoscopeImage.width / 2, imageY + stethoscopeImage.height / 2, waveformSamples[i].area.x, waveformSamples[i].area.y));
             }
           }
           else if(waveformSamples[i].audio.isPlaying()){    
@@ -369,7 +371,7 @@ while(1==1) {
             //waveformSamples[i].audio.jump(0.0);
             audioPlaying = false;  
           }
-           println(currentSampleIndex);
+           //if(currentSampleIndex != -1) println(currentSampleIndex);
         }  
         if(noforce==1)
         {
