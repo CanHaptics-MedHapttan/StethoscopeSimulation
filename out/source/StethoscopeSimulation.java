@@ -61,10 +61,7 @@ public class StethoscopeSimulation extends PApplet {
 private final ScheduledExecutorService scheduler      = Executors.newScheduledThreadPool(1);
 /* end scheduler definition ********************************************************************************************/ 
 
-ControlP5 cp5;
-Movie video;
-PImage heartPlacementImage;
-Gif heartbeatImage;
+
 
 /* device block definitions ********************************************************************************************/
 Board             haplyBoard;
@@ -135,10 +132,11 @@ float yr = 0;
 int intensityMultiplier = 4;
 
 /* graphical elements */
-PShape pGraph, joint, endEffector;
 PFont f;
+PShape pGraph, joint, endEffector;
 PImage stethoscopeImage;
-PImage heart;
+PImage heartPlacementImage;
+Gif heartbeatImage;
 
 int circleRadius = 15;
 float imageX = 0;
@@ -150,8 +148,6 @@ private class WaveformSample {
   PVector area;
   PVector circle;
   Waveform waveform;
-  float minData = Float.MAX_VALUE;
-  float maxData = -Float.MAX_VALUE;
 }
 
 WaveformSample[] waveformSamples;
@@ -159,9 +155,7 @@ int currentSampleIndex = 0;
 int waveIndex = 0;
 boolean renderWaveForm = true;
 int samples = 100;
-
 /* end elements definition *********************************************************************************************/ 
-
 
 
 /* setup section *******************************************************************************************************/
@@ -206,61 +200,7 @@ public void setup(){
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
 
-  for(int i = 0; i < waveformSamples.length; i++){      
-    float min = Float.MAX_VALUE;
-    float max = -Float.MAX_VALUE;
-    println("INDEX=" + i + " BEFORE : min="+min+ "| max="+max);
-    // Find the minimum and maximum waveform data values for each waveform in order to map the output range to a given threshold later on
-   for(int dataIndex = 0; dataIndex < waveformSamples[i].waveform.data.length; dataIndex++){
-      waveformSamples[i].waveform.input(waveformSamples[i].audio);
-      waveformSamples[i].waveform.analyze();   
-
-      if(waveformSamples[i].waveform.data[dataIndex] < min){
-        min = waveformSamples[i].waveform.data[dataIndex];
-      }
-      if(waveformSamples[i].waveform.data[dataIndex] > max){
-        max = waveformSamples[i].waveform.data[dataIndex];
-      }
-    }
-    println("INDEX=" + i + " AFTER : min="+min+ "| max="+max+"\n");
-    waveformSamples[i].minData = min;
-    waveformSamples[i].maxData = max;
-    //waveformSamples[i].maxData = Floats.max(waveformSamples[i].waveform.data);
-  } 
-
   /* smooth commented out by preprocessor */;
-
-  cp5 = new ControlP5(this);
-    
-  cp5.addTextlabel("Intensity multiplier")
-      .setText("Intensity multiplier")
-      .setPosition(0,250)
-      .setColorValue(color(255,0,0))
-      .setFont(createFont("Georgia",20))
-      ;  
-    cp5.addSlider("intensityMultiplier") 
-      .setPosition(0,275)
-      .setSize(200,20)
-      .setRange(0,10)
-      .setValue(4)
-      ;
-
-    cp5.addTextlabel("Loop time")
-      .setText("Loop time")
-      .setPosition(0,420)
-      .setColorValue(color(255,0,0))
-      .setFont(createFont("Georgia",20))
-      ;  
-    cp5.addSlider("looptime")
-      .setPosition(10,450)
-      .setSize(200,20)
-      .setRange(250,4000)
-      .setValue(500)
-      .setNumberOfTickMarks(16)
-      .setSliderMode(Slider.FLEXIBLE)
-      ;
-
-
 
   /* device setup */
   
@@ -308,9 +248,6 @@ public void setup(){
   thread("SimulationThread");
 }
 /* end setup section ***************************************************************************************************/
-
-
-
 
 
 /* draw section ********************************************************************************************************/
@@ -398,27 +335,8 @@ while(1==1) {
           waveformSamples[currentSampleIndex].waveform.input(waveformSamples[currentSampleIndex].audio);
           waveformSamples[currentSampleIndex].waveform.analyze();          
 
-          //float y = 0; //map(waveform.data[currentSampleIndex%(100-1)], -0.9423218, 0.93618774, -1, 1) * intensityMultiplier;
-          //float y = map(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)], -0.5, 1, -4, 4);
           float waveformValue = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
-          /* if(waveformValue < waveformSamples[currentSampleIndex].minData){
-            waveformSamples[currentSampleIndex].minData = waveformValue;
-          }
-          if(waveformValue > waveformSamples[currentSampleIndex].maxData){
-            waveformSamples[currentSampleIndex].maxData = waveformValue;
-          } */
 
-          
-
-          //float y = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
-          //println("MIN = " + waveformSamples[currentSampleIndex].minData);
-          //println("MAX = " + waveformSamples[currentSampleIndex].maxData);
-          // println(waveformSamples[currentSampleIndex].waveform.data[waveIndex%(100-1)]);
-          //println(y);
-          /* if(waveform.data[currentSampleIndex%(100-1)] < -0.5 || waveform.data[currentSampleIndex%(100-1)] > 0.5){
-            y = 1;  
-          }  */
-          //if(waveform.data[currentSampleIndex%(100-1)] > 0.5) y = 1;
           fEE.y = map(waveformValue, -0.5f, 1, -4, 4);
           fEE.x = 0.0f;
 
