@@ -97,7 +97,6 @@ int heartRate = 5;
 
 float xr = 0;
 float yr = 0;
-int intensityMultiplier = 4;
 
 /* graphical elements */
 PFont f;
@@ -116,6 +115,7 @@ private class WaveformSample {
   PVector area;
   PVector circle;
   Waveform waveform;
+  float intensityMultiplier;
 }
 
 WaveformSample[] waveformSamples;
@@ -167,6 +167,11 @@ void setup(){
   waveformSamples[1].audio = new SoundFile(this, "1-pulmonary_valve.wav");
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
+
+  waveformSamples[0].intensityMultiplier = 2;
+  waveformSamples[1].intensityMultiplier = 1.5;
+  waveformSamples[2].intensityMultiplier = 1.2;
+  waveformSamples[3].intensityMultiplier = 1;
 
   smooth();
 
@@ -305,7 +310,7 @@ while(1==1) {
 
           float waveformValue = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
 
-          fEE.y = map(waveformValue, -0.5, 1, -4, 4);
+          fEE.y = map(waveformValue, -0.5, 1, -4, 4) * waveformSamples[currentSampleIndex].intensityMultiplier;
           fEE.x = 0.0;
 
           waveIndex++;      
