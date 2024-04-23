@@ -2,8 +2,6 @@ import csv
 import sys
 from scipy.io import wavfile
 
-#FILENAME = "C:\\Users\\naomi\\Documents\\GIT\\ETS\\CanHaptics\\Test\\tricuspid_valve.wav"
-#OUTNAME = "C:\\Users\\naomi\\Documents\\GIT\\ETS\\CanHaptics\\Test\\sample.csv"
 FILENAME = sys.argv[1]
 OUTNAME = sys.argv[2]
 
