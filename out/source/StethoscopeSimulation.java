@@ -5,17 +5,7 @@ import processing.event.*;
 import processing.opengl.*;
 
 import processing.serial.*;
-import java.util.*;
-import java.io.*;
-import java.util.stream.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import static java.util.concurrent.TimeUnit.*;
-import java.util.concurrent.*;
-import controlP5.*;
-import java.util.ArrayList;
-import ddf.minim.*;
-import processing.video.*;
 import processing.sound.*;
 import gifAnimation.*;
 
@@ -40,16 +30,6 @@ public class StethoscopeSimulation extends PApplet {
  */
  
 /* library imports *****************************************************************************************************/ 
-
- 
-
-
-
-
-
-
-
-
 
 
 

@@ -59,7 +59,10 @@ This project uses Processing and requires a Haply 2diy device (version 2 or 3).
    ```sh
    git clone https://github.com/CanHaptics-MedHapttan/StethoscopeSimulation.git
    ```
+
 2. Install the required Processing packages
+- GifAnimation 3.0.0 by Patrick Meister, Jerome Saint-Clair
+- Sound 2.4.0 by The Processing Foundation
 
 3. Connect the Haply 2diy device and retrieve the COM port number from Device Manager settings
 
@@ -67,6 +70,7 @@ This project uses Processing and requires a Haply 2diy device (version 2 or 3).
   ```sh
    haplyBoard          = new Board(this, "COM#", 0);
    ```
+   
 5. If you are using Haply 2diy version 2, uncomment the following lines :
     ```
     /*
