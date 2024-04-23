@@ -97,7 +97,6 @@ int heartRate = 5;
 
 float xr = 0;
 float yr = 0;
-int intensityMultiplier = 4;
 
 /* graphical elements */
 PFont f;
@@ -116,6 +115,7 @@ private class WaveformSample {
   PVector area;
   PVector circle;
   Waveform waveform;
+  float intensityMultiplier;
 }
 
 WaveformSample[] waveformSamples;
@@ -168,6 +168,11 @@ void setup(){
   waveformSamples[2].audio = new SoundFile(this, "2-tricuspid_valve.wav");
   waveformSamples[3].audio = new SoundFile(this, "3-mitral_valve.wav");
 
+  waveformSamples[0].intensityMultiplier = 2;
+  waveformSamples[1].intensityMultiplier = 1.5;
+  waveformSamples[2].intensityMultiplier = 1.2;
+  waveformSamples[3].intensityMultiplier = 1;
+
   smooth();
 
   /* device setup */
@@ -182,17 +187,25 @@ void setup(){
    *      mac:          haplyBoard = new Board(this, "/dev/cu.usbmodem1411", 0);
    */ 
   try{
-    haplyBoard          = new Board(this, "COM6", 0);
+    haplyBoard          = new Board(this, "COM3", 0);
     widgetOne           = new Device(widgetOneID, haplyBoard);
     pantograph          = new Pantograph();
     
     widgetOne.set_mechanism(pantograph);
     
+    /*
     widgetOne.add_actuator(1, CCW, 2);
     widgetOne.add_actuator(2, CW, 1);
   
     widgetOne.add_encoder(1, CCW, 241, 10752, 2);
     widgetOne.add_encoder(2, CW, -61, 10752, 1);
+    */
+
+    widgetOne.add_actuator(1, CCW, 2);
+    widgetOne.add_actuator(2, CCW, 1);
+ 
+    widgetOne.add_encoder(1, CCW, 168, 4880, 2);
+    widgetOne.add_encoder(2, CCW, 12, 4880, 1); 
     
     widgetOne.device_set_parameters();    
   }
@@ -305,7 +318,7 @@ while(1==1) {
 
           float waveformValue = waveformSamples[currentSampleIndex].waveform.data[waveIndex%(samples-1)];
 
-          fEE.y = map(waveformValue, -0.5, 1, -4, 4);
+          fEE.y = map(waveformValue, -0.5, 1, -4, 4) * waveformSamples[currentSampleIndex].intensityMultiplier;
           fEE.x = 0.0;
 
           waveIndex++;      
